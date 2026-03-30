@@ -1,15 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Token from "./Token";
 import { GameResult } from "./GameResult";
+
+const CHOICES = [
+  { name: "paper", icon: "paper", color: "border-[#4865f4]" },
+  { name: "scissors", icon: "scissors", color: "border-[#ec9e0e]" },
+  { name: "rock", icon: "rock", color: "border-[#dc2e4e]" },
+];
+
+const RULES = {
+  paper: "rock", // Paper beats Rock
+  rock: "scissors", // Rock beats Scissors
+  scissors: "paper", // Scissors beats Paper
+};
 
 export function MainPage() {
   const [showRules, setShowRules] = useState(false);
   const [step, setStep] = useState(1);
   const [userPick, setUserPick] = useState(null);
+  const [housePick, setHousePick] = useState(null);
+  const [result, setResult] = useState("");
+  const [score, setScore] = useState(0);
 
-  const handlePick = (name, borderColor) => {
-    setUserPick({ icon: name, color: borderColor });
+  const getHousePick = () => {
+    const randomIndex = Math.floor(Math.random() * CHOICES.length);
+    return CHOICES[randomIndex];
+  };
+
+  const handlePick = (name, color) => {
+    setUserPick({ name, icon: name, color });
     setStep(2);
+  };
+
+  useEffect(() => {
+    if (step === 2 && !housePick) {
+      const timer = setTimeout(() => {
+        setHousePick(getHousePick());
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [step, housePick]);
+
+  useEffect(() => {
+    if (userPick && housePick && result === "") {
+      if (userPick.name === housePick.name) {
+        setResult("It's a tie!");
+      } else if (RULES[userPick.name] === housePick.name) {
+        setResult("You win!");
+        setScore((prevScore) => prevScore + 1);
+      } else {
+        setResult("You lose!");
+      }
+    }
+  }, [userPick, housePick, result]);
+
+  const resetGame = () => {
+    setUserPick(null);
+    setHousePick(null);
+    setResult("");
+    setStep(1);
   };
 
   return (
@@ -19,7 +69,9 @@ export function MainPage() {
         <img src="images/logo.svg" alt="Logo" className="w-24 h-auto md:w-40" />
         <div className="px-5 py-2 bg-white rounded-lg flex flex-col justify-between items-center">
           <span className="text-lg text-[#4865f4] font-bold">SCORE</span>
-          <span className="text-5xl text-[hsl(229,25%,31%)] font-bold">0</span>
+          <span className="text-5xl text-[hsl(229,25%,31%)] font-bold">
+            {score}
+          </span>
         </div>
       </div>
 
@@ -62,7 +114,12 @@ export function MainPage() {
           </div>
         </div>
       ) : (
-        <GameResult userPick={userPick} setStep={setStep} />
+        <GameResult
+          userPick={userPick}
+          housePick={housePick}
+          gameResult={result}
+          resetGame={resetGame}
+        />
       )}
 
       <div

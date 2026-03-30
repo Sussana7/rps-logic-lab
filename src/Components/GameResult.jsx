@@ -1,15 +1,7 @@
 import { useState } from "react";
 import Token from "./Token";
 
-export function GameResult({
-  userPick,
-  housePick,
-  gameResult,
-  resetGame,
-  score,
-}) {
-  const [showRules, setShowRules] = useState(false);
-
+export function GameResult({ userPick, housePick, gameResult, resetGame }) {
   if (!userPick) return null;
 
   return (
